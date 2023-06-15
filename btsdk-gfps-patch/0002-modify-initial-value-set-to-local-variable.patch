@@ -1,0 +1,92 @@
+From 648ae109a144cf737db76d89d0728ec6718f384d Mon Sep 17 00:00:00 2001
+From: "Yason.Wang" <Yason.Wang@email.com>
+Date: Tue, 14 Mar 2023 14:17:47 +0800
+Subject: [PATCH 2/3] modify: initial value set to local variable. check
+ BTSTACK_VER >= 3000001 is new stack else older stack. new stack use scan
+ response for appdend adv data. this is for backward compatible
+
+---
+ COMPONENT_gfps_provider/gfps_provider.c | 26 ++++++++++++++++++++++---
+ 1 file changed, 23 insertions(+), 3 deletions(-)
+
+diff --git a/COMPONENT_gfps_provider/gfps_provider.c b/COMPONENT_gfps_provider/gfps_provider.c
+index 2d52d5a..fd23a5b 100644
+--- a/COMPONENT_gfps_provider/gfps_provider.c
++++ b/COMPONENT_gfps_provider/gfps_provider.c
+@@ -552,9 +552,11 @@ static wiced_bool_t gfps_provider_advertisement_data_init(void)
+     p_elem              = gfps_provider_cb.adv_data.discoverable.p_elem +
+                           GFPS_PROVIDER_ADV_DATA_DISC_ELEM_IDX_MAX;
+ 
++#if BTSTACK_VER < 0x03000001
+     memcpy((void *) p_elem,
+            (void *) gfps_provider_cb.conf.appended_adv_data.p_elem,
+            gfps_provider_cb.conf.appended_adv_data.elem_num * sizeof(wiced_bt_ble_advert_elem_t));
++#endif
+ 
+     /* Not discoverable advertisement data. */
+     // Tx Power level
+@@ -595,9 +597,11 @@ static wiced_bool_t gfps_provider_advertisement_data_init(void)
+     p_elem              = gfps_provider_cb.adv_data.not_discoverable.p_elem +
+                           GFPS_PROVIDER_ADV_DATA_NOT_DISC_ELEM_IDX_MAX;
+ 
++#if BTSTACK_VER < 0x03000001
+     memcpy((void *) p_elem,
+            (void *) gfps_provider_cb.conf.appended_adv_data.p_elem,
+            gfps_provider_cb.conf.appended_adv_data.elem_num * sizeof(wiced_bt_ble_advert_elem_t));
++#endif
+ 
+     return WICED_TRUE;
+ 
+@@ -753,7 +757,7 @@ static wiced_bool_t gfps_provider_gatt_event_attribute_request_handler_write_key
+     uint8_t *p_index = (uint8_t *) &gfps_provider_cb.gatt.keybase_pairing_data;
+     wiced_bool_t public_key_present = WICED_FALSE;
+     wiced_bool_t decrypt_result = WICED_FALSE;
+-    gfps_raw_request_t decrypted_raw_request;
++    gfps_raw_request_t decrypted_raw_request = {0};
+     uint8_t i;
+     wiced_bt_gfps_account_key_t *p_account_key = NULL;
+ 
+@@ -1159,7 +1163,7 @@ static wiced_bool_t gfps_provider_gatt_event_attribute_request_handler_write(wic
+ static wiced_bool_t gfps_provider_gatt_event_attribute_request_handler(wiced_bt_gatt_event_data_t *p_event_data, wiced_bt_gatt_status_t *p_result)
+ {
+ #if BTSTACK_VER >= 0x03000001
+-    wiced_bool_t ret;
++    wiced_bool_t ret = WICED_FALSE;
+ 
+     GFPS_TRACE("gfps_provider_gatt_event_attribute_request_handler (opcode: %d)\n",
+                p_event_data->attribute_request.opcode);
+@@ -1326,6 +1330,22 @@ void wiced_bt_gfps_provider_advertisement_start(uint8_t discoverability)
+ 
+         wiced_bt_ble_set_raw_advertisement_data(gfps_provider_cb.adv_data.not_discoverable.elem_num,
+                                                 gfps_provider_cb.adv_data.not_discoverable.p_elem);
++#if BTSTACK_VER >= 0x03000001
++        /* In newer BTSTACK, it had been updated to use new HCI command set of
++         * extended advertisement in all related WICED APIs. Per spec,
++         * SCAN_RESP data is mandotary for HCI_LE_Set_Extended_Advertising_Enable
++         * with scannable advertising and it's uncompatible with original
++         * HCI_LE_Set_Advertising_Enable.
++         * To keep backward compatibility, here we set user appended data as
++         * SCAN_RESP data. This method here only works if user appended data
++         * is not empty.
++         * NOTE: set SCAN_RESP data is required to be done after
++         * wiced_bt_ble_set_raw_advertisement_data
++         */
++        wiced_bt_ble_set_raw_scan_response_data(
++                gfps_provider_cb.conf.appended_adv_data.elem_num,
++                gfps_provider_cb.conf.appended_adv_data.p_elem);
++#endif
+ 
+         wiced_bt_start_advertisements(BTM_BLE_ADVERT_UNDIRECTED_LOW, 0, NULL);
+     }
+@@ -1426,7 +1446,7 @@ static wiced_bool_t gfps_provider_account_data_fill(void *p_account_data, uint8_
+     wiced_bt_gfps_account_key_t *p_account_key = NULL;
+     uint8_t i, j;
+     uint8_t *p_index = p_account_data;
+-    uint8_t sha_source[sizeof(wiced_bt_link_key_t) + sizeof(wiced_bt_device_address_t)];
++    uint8_t sha_source[sizeof(wiced_bt_link_key_t) + sizeof(wiced_bt_device_address_t)] = {0};
+     uint8_t sha_result[32] = {0};
+     uint8_t sha_source_len;
+     uint32_t X[8] = {0};
+-- 
+2.34.1
+

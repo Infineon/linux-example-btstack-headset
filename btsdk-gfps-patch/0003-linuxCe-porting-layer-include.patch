@@ -1,0 +1,38 @@
+From 4e7b148f0e55a3a0897e539a3081f10297b6676d Mon Sep 17 00:00:00 2001
+From: "Yason.Wang" <Yason.Wang@email.com>
+Date: Tue, 14 Mar 2023 14:29:29 +0800
+Subject: [PATCH 3/3] linuxCe porting layer include
+
+---
+ COMPONENT_gfps_provider/fastpair_sec_utils.c | 1 +
+ COMPONENT_gfps_provider/gfps_provider.c      | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/COMPONENT_gfps_provider/fastpair_sec_utils.c b/COMPONENT_gfps_provider/fastpair_sec_utils.c
+index 99f56ac..6d10669 100644
+--- a/COMPONENT_gfps_provider/fastpair_sec_utils.c
++++ b/COMPONENT_gfps_provider/fastpair_sec_utils.c
+@@ -11,6 +11,7 @@
+ #include <stdlib.h>
+ #include "wiced_bt_trace.h"
+ #include "wiced_memory.h"
++#include "wiced_hal_memory.h"
+ 
+ //SHA-256 declaration
+ typedef struct
+diff --git a/COMPONENT_gfps_provider/gfps_provider.c b/COMPONENT_gfps_provider/gfps_provider.c
+index fd23a5b..8e94061 100644
+--- a/COMPONENT_gfps_provider/gfps_provider.c
++++ b/COMPONENT_gfps_provider/gfps_provider.c
+@@ -20,6 +20,8 @@
+ #include "wiced_hal_rand.h"
+ #include "wiced_timer.h"
+ #include "wiced_bt_trace.h"
++#include "wiced_hal_memory.h"
++#include "wiced_hal_utils.h"
+ 
+ #define GFPS_DEBUG_ENABLE   0
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,34 @@
+From c804f1f881d03c64af92f8c1b317b02a76d8902d Mon Sep 17 00:00:00 2001
+From: "Yason.Wang" <Yason.Wang@email.com>
+Date: Tue, 14 Mar 2023 14:00:53 +0800
+Subject: [PATCH 1/3] modify: remove cast pointer warning for linuxCe
+
+---
+ COMPONENT_gfps_provider/fastpair_sec_utils.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/COMPONENT_gfps_provider/fastpair_sec_utils.c b/COMPONENT_gfps_provider/fastpair_sec_utils.c
+index 16dfa39..99f56ac 100644
+--- a/COMPONENT_gfps_provider/fastpair_sec_utils.c
++++ b/COMPONENT_gfps_provider/fastpair_sec_utils.c
+@@ -77,7 +77,7 @@ void reverse_input(uint8_t *in, uint16_t in_len, uint8_t *out)
+ {
+     uint8_t *temp;
+     uint16_t i;
+-    temp = wiced_memory_allocate(in_len);
++    temp = (uint8_t *)wiced_memory_allocate(in_len);
+     if (temp == NULL)
+         return;
+     memcpy(temp, in, in_len);
+@@ -92,7 +92,7 @@ void fastpair_sec_sha256(uint8_t *p_in, uint16_t in_len, uint8_t *p_out)
+     sha256_context_t    context;
+     uint8_t *p_new_in;
+ 
+-    p_new_in = wiced_memory_allocate(in_len);
++    p_new_in = (uint8_t *)wiced_memory_allocate(in_len);
+     if (p_new_in == NULL)
+         return;
+     reverse_input(p_in, in_len, p_new_in);
+-- 
+2.34.1
+

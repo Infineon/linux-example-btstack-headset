@@ -1,0 +1,30 @@
+From a246804c6f6ca73a54fab1f344cc45f258389a82 Mon Sep 17 00:00:00 2001
+From: "barry.wang" <barry.wang@infineon.com>
+Date: Mon, 24 Apr 2023 17:45:14 +0800
+Subject: [PATCH] fix wiced_bt_get_buffer twice issue
+
+---
+ COMPONENT_avrc_controller/wiced_bt_avrc_ct.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/COMPONENT_avrc_controller/wiced_bt_avrc_ct.c b/COMPONENT_avrc_controller/wiced_bt_avrc_ct.c
+index 1fd36ad..444a7af 100644
+--- a/COMPONENT_avrc_controller/wiced_bt_avrc_ct.c
++++ b/COMPONENT_avrc_controller/wiced_bt_avrc_ct.c
+@@ -633,8 +633,11 @@ wiced_bt_avrc_sts_t wiced_avrc_build_metadata_rsp (void *p_rsp, wiced_bt_avrc_xm
+ {
+    wiced_bt_avrc_sts_t         avrc_status;
+ 
+-   if ((*p_rspbuf = (wiced_bt_avrc_xmit_buf_t *)wiced_bt_get_buffer (DEFAULT_METADATA_RSP_SIZE + WICED_AVRC_XMIT_BUF_OVERHEAD)) == NULL)
+-       return (AVRC_STS_NO_RESOURCES);
++   if ((*p_rspbuf) == NULL){
++        if ((*p_rspbuf = (wiced_bt_avrc_xmit_buf_t *)wiced_bt_get_buffer (DEFAULT_METADATA_RSP_SIZE + WICED_AVRC_XMIT_BUF_OVERHEAD)) == NULL){
++            return (AVRC_STS_NO_RESOURCES);
++        }
++   }
+ 
+    (*p_rspbuf)->buffer_size = DEFAULT_METADATA_RSP_SIZE;
+ 
+-- 
+2.25.1
+
